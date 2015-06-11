@@ -1,0 +1,5 @@
+syntax: glob
+*.hex
+*.elf
+*.eeprom
+tags
