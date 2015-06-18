@@ -33,6 +33,13 @@ The strobe project works with an IR proximity detector built with a 38 kHz
 IR LED strobe and an IR receiver. It demonstrates more advanced interrupts,
 including both timer interrupts and pin change interrupts.
 
+#### 04\_addresses
+
+[Article](https://kyleisom.net/projects/embedded-intro/addresses-in-detail/)
+
+The addresses project includes a custom header for referencing PORTB
+and DDRB. It's intended to demystify some of how things work under the hood.
+
 
 ### License
 
