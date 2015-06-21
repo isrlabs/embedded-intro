@@ -46,8 +46,8 @@ main(void)
 		/* Toggle the LED. */
 		LED_PORT ^= BV(LED_PIN);
 
-		/* Sleep for one second. */
-		_delay_ms(1000);
+		/* Sleep for a half-second. */
+		_delay_ms(500);
 	}
 
 	/*
