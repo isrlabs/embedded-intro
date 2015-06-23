@@ -46,7 +46,7 @@
 
 struct reading {
 	/* val contains the last measurement from the ADC. */
-	uint16_t		val;
+	uint8_t		val;
 
 	/* count stores the number of conversions that have occurred. */
 	uint16_t	count;
@@ -77,9 +77,6 @@ init_ADC(void)
 
 	/* Disable digital inputs on the URS channel. */
 	DIDR0 |= _BV(URS_CHANNEL);
-
-	/* Ensure that ADC3 is an input. */
-	DDRC &= ~_BV(PC3);
 
 	/* Kick off the first conversion. */
 	ADCSRA |= _BV(ADSC);
