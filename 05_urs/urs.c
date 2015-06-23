@@ -46,7 +46,7 @@
 
 struct reading {
 	/* val contains the last measurement from the ADC. */
-	uint8_t		val;
+	uint16_t		val;
 
 	/* count stores the number of conversions that have occurred. */
 	uint16_t	count;
@@ -58,20 +58,31 @@ static void
 init_ADC(void)
 {
 	/* Use Vcc (the main power supply) as the reference. */
-	ADMUX |= _BV(REFS0);
+	ADMUX = _BV(REFS0);
 
 	/* Left-align the results, which gives 8-bit precision. */
 	ADMUX |= _BV(ADLAR);
 
+	ADMUX |= URS_CHANNEL;
+
 	/*
 	 * We really don't need a high sample rate, so we use a
-	 * high prescale. A prescale of 64 with a 16 MHz clock
-	 * means it samples at a rate of 250 kHz.
+	 * high prescale. A prescale of 128 with a 16 MHz clock
+	 * means it samples at a rate of 125 kHz.
 	 */
-	ADCSRA |= _BV(ADPS2) | _BV(ADPS1);
+	ADCSRA = _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
 
 	/* Enable the ADC. */
 	ADCSRA |= _BV(ADEN);
+
+	/* Disable digital inputs on the URS channel. */
+	DIDR0 |= _BV(URS_CHANNEL);
+
+	/* Ensure that ADC3 is an input. */
+	DDRC &= ~_BV(PC3);
+
+	/* Kick off the first conversion. */
+	ADCSRA |= _BV(ADSC);
 }
 
 
@@ -84,8 +95,8 @@ init_timer1(void)
 	 */
 	TCCR1B |= _BV(WGM12);
 
-	/* Use a prescaler of 1024. */
-	TCCR1B |= _BV(CS12) | _BV(CS10);
+	/* Use a prescaler of 8. */
+	TCCR1B |= _BV(CS11);
 
 	/* Trigger an interrupt on output compare A. */
 	TIMSK1 |= _BV(OCIE1A);
@@ -103,27 +114,29 @@ ISR(TIMER1_COMPA_vect)
 	/* Clear pending ADC interrupts. */
 	ADCSRA |= _BV(ADIF);
 
+	/* Select the URS channel. */
+	ADMUX = (ADMUX & 0xF8) | URS_CHANNEL;
+
 	/* Trigger an ADC conversion. */
 	ADCSRA |= _BV(ADSC);
 
 	/* Enable the ADC interrupt. */
 	ADCSRA |= _BV(ADIE);
-
-	/* Select the URS channel. */
-	ADMUX |= URS_CHANNEL;
 }
 
 
 ISR(ADC_vect)
 {
 	/*
-	 * Read the distance measurement into the sensor readout structure.
+	 * Read the distance measurement into the sensor readout
+	 * structure.
 	 */
 	sensor.val = ADCH;
 	sensor.count++;
 
 	/*
-	 * Turn off the ADC interrupt and clear any pending interrupts.
+	 * Turn off the ADC interrupt and clear any pending
+	 * interrupts.
 	 */
 	ADCSRA |= _BV(ADIF);
 	ADCSRA &= ~_BV(ADIE);
@@ -194,11 +207,12 @@ main(void)
 	init_ADC();
 	init_timer1();
 	init_UART();
+	sei();
 
 	write_string("Boot OK.\r\n");
 
 	while (1) {
-		_delay_ms(100);
+		_delay_ms(1001);
 		snprintf(buf, 31, "URS reading #%5u: %u\r\n",
 		    sensor.count, sensor.val);
 		write_string(buf);

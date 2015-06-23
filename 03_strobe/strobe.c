@@ -163,10 +163,10 @@ static void
 setup_strobe(void)
 {
 	/* The timer should be in CTC mode. */
-	TCCR1A |= _BV(WGM01);
+	TCCR1A |= _BV(WGM11);
 
 	/* Use a prescaler of 8. */
-	TCCR1B |= _BV(CS01);
+	TCCR1B |= _BV(CS11);
 
 	TCNT1 = 0;	/* Reset the counter. */
 	TIFR1 |= _BV(OCF1A);

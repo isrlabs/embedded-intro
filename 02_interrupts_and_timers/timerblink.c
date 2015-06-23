@@ -41,8 +41,8 @@ init_timer1(void)
 	 */
 	TCCR1B |= _BV(WGM12);
 
-	/* Use a prescaler of 1024. */
-	TCCR1B |= _BV(CS12) | _BV(CS10);
+	/* Use a prescaler of 8. */
+	TCCR1B |= _BV(CS11);
 
 	/* Trigger an interrupt on output compare A. */
 	TIMSK1 |= _BV(OCIE1A);
