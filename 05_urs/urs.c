@@ -1,24 +1,24 @@
 /*
- * Copyright (c) 2015 Kyle Isom <coder@kyleisom.net>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
- * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- */
+* Copyright (c) 2015 Kyle Isom <coder@kyleisom.net>
+*
+* Permission is hereby granted, free of charge, to any person obtaining a
+* copy of this software and associated documentation files (the "Software"),
+* to deal in the Software without restriction, including without limitation
+* the rights to use, copy, modify, merge, publish, distribute, sublicense,
+* and/or sell copies of the Software, and to permit persons to whom the
+* Software is furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included
+* in all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+* OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 
 #include <avr/io.h>
@@ -30,30 +30,33 @@
 
 
 /*
- * The ultrasonic ranging sensor is connected to analog input 3,
- * which is PC3.
- */
-#define URS_CHANNEL	3
+* The ultrasonic ranging sensor is connected to analog input 3,
+* which is PC3.
+*/
+#define URS_CHANNEL	ADC3D
 
 
 /*
- * Timer1 is set up with a prescaler of 8, which means 2 cycles
- * per microsecond. The URS can range once every 49ms, which translates
- * to a timer value of 98000.
- */
-#define URS_CYCLE	98000
+* Timer1 is set up with a prescaler of 64, which means 4 microseconds
+* per tick. The URS can range once every 49ms, which translates
+* to a timer value of 12250.
+*/
+#define URS_CYCLE	12250
 
 
 struct reading {
-	/* val contains the last measurement from the ADC. */
-	uint8_t		val;
+/* val contains the last measurement from the ADC. */
+uint8_t		val;
 
-	/* count stores the number of conversions that have occurred. */
-	uint16_t	count;
+/* count stores the number of conversions that have occurred. */
+uint16_t	count;
 };
 volatile struct reading	sensor = {0, 0};
 
 
+/*
+* init_ADC prepares the ADC for use with the URS.
+*/
 static void
 init_ADC(void)
 {
@@ -63,6 +66,7 @@ init_ADC(void)
 	/* Left-align the results, which gives 8-bit precision. */
 	ADMUX |= _BV(ADLAR);
 
+	/* Select the URS in the channel multiplexor.*/
 	ADMUX |= URS_CHANNEL;
 
 	/*
@@ -92,8 +96,8 @@ init_timer1(void)
 	 */
 	TCCR1B |= _BV(WGM12);
 
-	/* Use a prescaler of 8. */
-	TCCR1B |= _BV(CS11);
+	/* Use a prescaler of 64. */
+	TCCR1B |= _BV(CS11) | _BV(CS10);
 
 	/* Trigger an interrupt on output compare A. */
 	TIMSK1 |= _BV(OCIE1A);
@@ -216,43 +220,5 @@ main(void)
 	}
 
 	return 0;
-}
-
-
-#define CHANNEL_COUNT	3
-static uint8_t	channels[CHANNEL_COUNT] = {ADC0, ADC2, ADC3};
-static uint16_t	readings[CHANNEL_COUNT] = {0, 0, 0};
-static uint8_t  channel = 0;
-
-
-ISR(ADC_vect)
-{
-	readings[channel] = ADC;
-	/*
-	 * If there are channels still left to be read, then
-	 * set the ADC to the new channel and kick off a new
-	 * conversion.
-	 */
-	if (channel != sizeof(channels)) {
-		channel++;
-		/*
-		 * Clear the channel selection bits and set the active
-		 * channel.
-		 */
-		ADMUX = (ADMUX & 0xF8) | channels[channel];
-		ADCSRA |= _BV(ADSC);
-	}
-	/*
-	 * If all the channels have been read, then disable the
-	 * interrupt.
-	 */
-	else {
-		/*
-		 * Turn off the ADC interrupt and clear any pending
-		 * interrupts.
-		 */
-		ADCSRA |= _BV(ADIF);
-		ADCSRA &= ~_BV(ADIE);
-	}
 }
 
