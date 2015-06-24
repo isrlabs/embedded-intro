@@ -38,10 +38,10 @@
 
 /*
  * Timer1 is set up with a prescaler of 8, which means 2 cycles
- * per microsecond. The URS can range once every 20ms, which translates
- * to a timer value of 40000.
+ * per microsecond. The URS can range once every 49ms, which translates
+ * to a timer value of 98000.
  */
-#define URS_CYCLE	40000
+#define URS_CYCLE	98000
 
 
 struct reading {
@@ -217,3 +217,42 @@ main(void)
 
 	return 0;
 }
+
+
+#define CHANNEL_COUNT	3
+static uint8_t	channels[CHANNEL_COUNT] = {ADC0, ADC2, ADC3};
+static uint16_t	readings[CHANNEL_COUNT] = {0, 0, 0};
+static uint8_t  channel = 0;
+
+
+ISR(ADC_vect)
+{
+	readings[channel] = ADC;
+	/*
+	 * If there are channels still left to be read, then
+	 * set the ADC to the new channel and kick off a new
+	 * conversion.
+	 */
+	if (channel != sizeof(channels)) {
+		channel++;
+		/*
+		 * Clear the channel selection bits and set the active
+		 * channel.
+		 */
+		ADMUX = (ADMUX & 0xF8) | channels[channel];
+		ADCSRA |= _BV(ADSC);
+	}
+	/*
+	 * If all the channels have been read, then disable the
+	 * interrupt.
+	 */
+	else {
+		/*
+		 * Turn off the ADC interrupt and clear any pending
+		 * interrupts.
+		 */
+		ADCSRA |= _BV(ADIF);
+		ADCSRA &= ~_BV(ADIE);
+	}
+}
+
