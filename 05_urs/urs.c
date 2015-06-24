@@ -53,10 +53,12 @@ uint16_t	count;
 };
 volatile struct reading	sensor = {0, 0};
 
+#define URS_CHANNEL	ADC3D
+
 
 /*
-* init_ADC prepares the ADC for use with the URS.
-*/
+ * init_ADC prepares the ADC for use with the URS.
+ */
 static void
 init_ADC(void)
 {
