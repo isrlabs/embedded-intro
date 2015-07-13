@@ -28,6 +28,8 @@
 
 #include <stdio.h>
 
+#warning "The PWM code is still under development."
+
 // The PWM subsystem uses Timer1.
 static void
 initTimer1(void)
