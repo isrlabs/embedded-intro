@@ -88,7 +88,7 @@ static volatile int8_t	active = 0;
 
 
 void
-pwm::connect(uint8_t which, uint8_t pin)
+connect(uint8_t which, uint8_t pin)
 {
 	// Verify servo is active.
 	if (which >= ACTIVE_SERVOS) {
@@ -102,7 +102,7 @@ pwm::connect(uint8_t which, uint8_t pin)
 }
 
 void
-pwm::set_limits(uint8_t which, uint16_t min, uint16_t max)
+set_limits(uint8_t which, uint16_t min, uint16_t max)
 {
 	// Verify servo is active.
 	if (which >= ACTIVE_SERVOS) {
@@ -120,7 +120,7 @@ pwm::set_limits(uint8_t which, uint16_t min, uint16_t max)
 
 
 void
-pwm::trim(uint8_t which, int16_t trim)
+trim(uint8_t which, int16_t trim)
 {
 	// Verify servo is active.
 	if (which >= ACTIVE_SERVOS) {
@@ -146,7 +146,7 @@ servo_min(uint8_t which)
 
 
 void
-pwm::set_servo(uint8_t which, uint32_t us)
+set_servo(uint8_t which, uint32_t us)
 {
 	uint8_t	saved_SREG;
 
@@ -175,7 +175,7 @@ pwm::set_servo(uint8_t which, uint32_t us)
 
 
 uint16_t
-pwm::get_servo(uint8_t which)
+get_servo(uint8_t which)
 {
 	// Verify that a valid servo is being addressed.
 	if (which >= ACTIVE_SERVOS) {
@@ -223,3 +223,11 @@ ISR(TIMER1_COMPA_vect)
 	timer1ISR();
 }
 
+
+int
+main(void)
+{
+	while (1) {}
+
+	return 0;
+}
